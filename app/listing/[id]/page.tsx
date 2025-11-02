@@ -1,0 +1,261 @@
+/**
+ * Listing Detail Page
+ * Full property details with gallery, map, and inquiry form
+ */
+
+import { notFound } from 'next/navigation'
+import { supabaseAdmin } from '@/lib/supabase'
+import BackButton from '@/components/BackButton'
+import ListingGallery from '@/components/ListingGallery'
+import MapView from '@/components/MapView'
+import { formatCurrency, formatDate } from '@/lib/utils'
+import { Bed, Bath, Square, MapPin, Calendar, PawPrint, Mail, Phone } from 'lucide-react'
+
+interface PageProps {
+  params: { id: string }
+}
+
+export async function generateMetadata({ params }: PageProps) {
+  const { data: listing } = await supabaseAdmin
+    .from('Listing')
+    .select('title, description')
+    .eq('id', params.id)
+    .single()
+
+  if (!listing) {
+    return { title: 'Listing Not Found' }
+  }
+
+  return {
+    title: `${listing.title} | RentUSA`,
+    description: listing.description.slice(0, 160),
+  }
+}
+
+export default async function ListingDetailPage({ params }: PageProps) {
+  console.log('🔍 Fetching listing with ID:', params.id)
+  
+  const { data: listing, error } = await supabaseAdmin
+    .from('Listing')
+    .select(`
+      *,
+      city:City(*),
+      state:State(*),
+      photos:Photo(*),
+      listedBy:User!Listing_listedByUserId_fkey(id, name, email)
+    `)
+    .eq('id', params.id)
+    .single()
+
+  console.log('📊 Listing fetch result:', {
+    found: !!listing,
+    published: listing?.published,
+    error: error?.message || null,
+    hasPhotos: listing?.photos?.length || 0,
+    hasCity: !!listing?.city,
+    hasState: !!listing?.state,
+  })
+
+  if (error) {
+    console.error('❌ Error fetching listing:', error)
+    notFound()
+  }
+
+  if (!listing) {
+    console.error('❌ Listing not found for ID:', params.id)
+    notFound()
+  }
+
+  if (!listing.published) {
+    console.error('❌ Listing not published:', params.id)
+    notFound()
+  }
+
+  const amenities = listing.amenities as string[] || []
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Back Button */}
+        <div className="mb-4 sm:mb-6">
+          <BackButton />
+        </div>
+
+        {/* Gallery */}
+        <ListingGallery photos={listing.photos} title={listing.title} />
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mt-6 sm:mt-8">
+          {/* Left Column - Details */}
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+            {/* Header */}
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div className="flex-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                    {listing.title}
+                  </h1>
+                  <div className="flex items-start text-gray-600 mb-4">
+                    <MapPin className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                    <span className="text-sm sm:text-base">
+                      {listing.address}, {listing.city.name}, {listing.state.code} {listing.zip}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-left sm:text-right">
+                  <div className="text-2xl sm:text-3xl font-bold text-primary-600">
+                    {formatCurrency(Number(listing.price))}
+                    <span className="text-base sm:text-lg text-gray-500">/mo</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Features */}
+              <div className="flex flex-wrap gap-4 sm:gap-6 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
+                <div className="flex items-center">
+                  <Bed className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mr-2" />
+                  <span className="text-sm sm:text-base text-gray-900 font-medium">{listing.bedrooms} Bedrooms</span>
+                </div>
+                <div className="flex items-center">
+                  <Bath className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mr-2" />
+                  <span className="text-sm sm:text-base text-gray-900 font-medium">{Number(listing.bathrooms)} Bathrooms</span>
+                </div>
+                {listing.sqft && (
+                  <div className="flex items-center">
+                    <Square className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mr-2" />
+                    <span className="text-sm sm:text-base text-gray-900 font-medium">{listing.sqft.toLocaleString()} sqft</span>
+                  </div>
+                )}
+                {listing.petsAllowed && (
+                  <div className="flex items-center">
+                    <PawPrint className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mr-2" />
+                    <span className="text-sm sm:text-base text-gray-900 font-medium">Pets Allowed</span>
+                  </div>
+                )}
+                {listing.availableDate && (
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mr-2" />
+                    <span className="text-sm sm:text-base text-gray-900 font-medium">
+                      Available {formatDate(listing.availableDate)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Description</h2>
+              <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line leading-relaxed">{listing.description}</p>
+            </div>
+
+            {/* Amenities */}
+            {amenities.length > 0 && (
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Amenities</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
+                  {amenities.map((amenity, index) => (
+                    <div key={index} className="flex items-center">
+                      <div className="h-2 w-2 bg-primary-600 rounded-full mr-2 flex-shrink-0" />
+                      <span className="text-sm sm:text-base text-gray-700">{amenity}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Map */}
+            {listing.latitude && listing.longitude && (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Location</h2>
+                <MapView
+                  listings={[
+                    {
+                      id: listing.id,
+                      title: listing.title,
+                      latitude: listing.latitude,
+                      longitude: listing.longitude,
+                      price: Number(listing.price),
+                    },
+                  ]}
+                  center={[listing.latitude, listing.longitude]}
+                  zoom={13}
+                  height="400px"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Contact Form */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:sticky lg:top-8">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Contact Property</h2>
+              <form className="space-y-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                    Message
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    rows={4}
+                    required
+                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base"
+                    placeholder="I'm interested in this property..."
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-primary-600 hover:bg-primary-700 text-white py-2.5 sm:py-3 rounded-md font-medium transition-colors text-sm sm:text-base"
+                >
+                  Send Message
+                </button>
+              </form>
+
+              {/* Listed By */}
+              <div className="mt-6 pt-6 border-t">
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Listed By</h3>
+                <p className="text-gray-900 font-medium text-sm sm:text-base">{listing.listedBy.name || 'Property Manager'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,44 @@
+/**
+ * RentUSA Logo Component
+ * SVG logo with house icon
+ */
+
+export default function Logo({ className = "h-8 w-8" }: { className?: string }) {
+  return (
+    <svg 
+      viewBox="0 0 100 100" 
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Background Circle */}
+      <circle cx="50" cy="50" r="48" fill="#3B82F6" stroke="#1E40AF" strokeWidth="2"/>
+      
+      {/* House Icon */}
+      <g transform="translate(50, 50)">
+        {/* Roof */}
+        <path d="M -22 -8 L 0 -25 L 22 -8 Z" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="1.5"/>
+        
+        {/* House Body */}
+        <rect x="-18" y="-8" width="36" height="28" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="1.5" rx="1"/>
+        
+        {/* Door */}
+        <rect x="-6" y="4" width="12" height="16" fill="#3B82F6" rx="1"/>
+        <circle cx="3" cy="12" r="1" fill="#FFFFFF"/>
+        
+        {/* Windows */}
+        <rect x="-14" y="-2" width="6" height="6" fill="#60A5FA" rx="0.5"/>
+        <rect x="8" y="-2" width="6" height="6" fill="#60A5FA" rx="0.5"/>
+        
+        {/* Window Panes */}
+        <line x1="-11" y1="-2" x2="-11" y2="4" stroke="#FFFFFF" strokeWidth="0.5"/>
+        <line x1="-14" y1="1" x2="-8" y2="1" stroke="#FFFFFF" strokeWidth="0.5"/>
+        <line x1="11" y1="-2" x2="11" y2="4" stroke="#FFFFFF" strokeWidth="0.5"/>
+        <line x1="8" y1="1" x2="14" y2="1" stroke="#FFFFFF" strokeWidth="0.5"/>
+        
+        {/* USA Flag Stars */}
+        <text x="-20" y="-12" fontSize="8" fill="#FBBF24" fontWeight="bold">★</text>
+        <text x="16" y="-12" fontSize="8" fill="#FBBF24" fontWeight="bold">★</text>
+      </g>
+    </svg>
+  )
+}

@@ -1,0 +1,264 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// USER MODEL - Authentication & Authorization
+// ============================================
+enum Role {
+  ADMIN
+  LANDLORD
+  RENTER
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  hashedPassword String?
+  image          String?
+  role           Role      @default(RENTER)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  listings       Listing[]       @relation("UserListings")
+  inquiries      Inquiry[]
+  savedListings  SavedListing[]
+  subscriptions  Subscription[]
+  accounts       Account[]
+  sessions       Session[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// NextAuth Account model for OAuth
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// NextAuth Session model
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// NextAuth Verification Token model
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================
+// LOCATION MODELS - States & Cities
+// ============================================
+model State {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  code      String    @unique // e.g., "CA", "NY", "DC"
+  createdAt DateTime  @default(now())
+  
+  // Relations
+  cities    City[]
+  listings  Listing[]
+
+  @@index([code])
+  @@map("states")
+}
+
+model City {
+  id        String    @id @default(cuid())
+  name      String
+  stateId   String
+  slug      String    // URL-friendly name (e.g., "los-angeles")
+  createdAt DateTime  @default(now())
+  
+  // Relations
+  state     State     @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  listings  Listing[]
+
+  @@unique([name, stateId]) // Same city name can exist in different states
+  @@index([stateId])
+  @@index([slug])
+  @@map("cities")
+}
+
+// ============================================
+// LISTING MODEL - Property Listings
+// ============================================
+model Listing {
+  id            String    @id @default(cuid())
+  title         String
+  description   String    @db.Text
+  address       String
+  cityId        String
+  stateId       String
+  zip           String
+  latitude      Float?    // For map positioning
+  longitude     Float?
+  
+  // Property details
+  price         Decimal   @db.Decimal(10, 2)
+  bedrooms      Int
+  bathrooms     Decimal   @db.Decimal(3, 1) // Allow 1.5, 2.5 bathrooms
+  sqft          Int?
+  petsAllowed   Boolean   @default(false)
+  amenities     Json?     // Array of amenities as JSON
+  
+  // Listing status
+  featured      Boolean   @default(false)  // Premium listing
+  published     Boolean   @default(false)  // Admin approval required
+  availableDate DateTime?
+  
+  // Relations
+  listedByUserId String
+  listedBy       User     @relation("UserListings", fields: [listedByUserId], references: [id], onDelete: Cascade)
+  city           City     @relation(fields: [cityId], references: [id])
+  state          State    @relation(fields: [stateId], references: [id])
+  
+  // Child relations
+  photos         Photo[]
+  inquiries      Inquiry[]
+  savedBy        SavedListing[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([stateId])
+  @@index([cityId])
+  @@index([listedByUserId])
+  @@index([published])
+  @@index([featured])
+  @@index([price])
+  @@index([bedrooms])
+  @@map("listings")
+}
+
+// ============================================
+// PHOTO MODEL - Listing Images
+// ============================================
+model Photo {
+  id         String   @id @default(cuid())
+  listingId  String
+  url        String   // Cloudinary URL
+  publicId   String   // Cloudinary public ID for deletion
+  isPrimary  Boolean  @default(false)
+  order      Int      @default(0) // Display order
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+  @@map("photos")
+}
+
+// ============================================
+// INQUIRY MODEL - Messages from Renters
+// ============================================
+model Inquiry {
+  id         String   @id @default(cuid())
+  listingId  String
+  userId     String?  // Optional - guests can inquire too
+  message    String   @db.Text
+  email      String
+  phone      String?
+  name       String
+  status     String   @default("PENDING") // PENDING, RESPONDED, CLOSED
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([listingId])
+  @@index([userId])
+  @@index([status])
+  @@map("inquiries")
+}
+
+// ============================================
+// SAVED LISTING MODEL - Favorites
+// ============================================
+model SavedListing {
+  id         String   @id @default(cuid())
+  userId     String
+  listingId  String
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId]) // Prevent duplicate saves
+  @@index([userId])
+  @@map("saved_listings")
+}
+
+// ============================================
+// SUBSCRIPTION MODEL - Stripe Subscriptions
+// ============================================
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  UNPAID
+  TRIALING
+}
+
+model Subscription {
+  id               String             @id @default(cuid())
+  userId           String
+  stripeCustomerId String             @unique
+  stripeSubscriptionId String?        @unique
+  stripePriceId    String
+  status           SubscriptionStatus @default(TRIALING)
+  currentPeriodEnd DateTime?
+  cancelAtPeriodEnd Boolean           @default(false)
+  
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  
+  // Relations
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("subscriptions")
+}

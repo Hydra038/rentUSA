@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <!-- Background Circle -->
+  <circle cx="96" cy="96" r="92" fill="#3B82F6" stroke="#1E40AF" stroke-width="4"/>
+  
+  <!-- House Icon -->
+  <g transform="translate(96, 96)">
+    <!-- Roof -->
+    <path d="M -42 -15 L 0 -48 L 42 -15 Z" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="3"/>
+    
+    <!-- House Body -->
+    <rect x="-34" y="-15" width="68" height="54" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="3" rx="2"/>
+    
+    <!-- Door -->
+    <rect x="-11" y="8" width="22" height="31" fill="#3B82F6" rx="2"/>
+    <circle cx="6" cy="23" r="2" fill="#FFFFFF"/>
+    
+    <!-- Windows -->
+    <rect x="-27" y="-4" width="11" height="11" fill="#60A5FA" rx="1"/>
+    <rect x="16" y="-4" width="11" height="11" fill="#60A5FA" rx="1"/>
+    
+    <!-- Window Panes -->
+    <line x1="-21.5" y1="-4" x2="-21.5" y2="7" stroke="#FFFFFF" stroke-width="1"/>
+    <line x1="-27" y1="1.5" x2="-16" y2="1.5" stroke="#FFFFFF" stroke-width="1"/>
+    <line x1="21.5" y1="-4" x2="21.5" y2="7" stroke="#FFFFFF" stroke-width="1"/>
+    <line x1="16" y1="1.5" x2="27" y2="1.5" stroke="#FFFFFF" stroke-width="1"/>
+    
+    <!-- USA Flag Stars -->
+    <text x="-38" y="-23" font-size="15" fill="#FBBF24" font-weight="bold">★</text>
+    <text x="30" y="-23" font-size="15" fill="#FBBF24" font-weight="bold">★</text>
+  </g>
+</svg>
