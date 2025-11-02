@@ -7,7 +7,7 @@
 
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
-import { Menu, X, Search } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import Logo from './Logo'
 
@@ -27,14 +27,7 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link
-              href="/search"
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-            >
-              Search Rentals
-            </Link>
-            
-            {status === 'authenticated' && (
+            {status === 'authenticated' ? (
               <>
                 {/* Role-based dashboard links */}
                 {session?.user?.role === 'ADMIN' && (
@@ -69,18 +62,18 @@ export default function Navbar() {
                   Sign Out
                 </button>
               </>
+            ) : (
+              <Link
+                href="/auth/signin"
+                className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 font-medium transition-colors text-sm"
+              >
+                Sign In
+              </Link>
             )}
           </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center space-x-4">
-            <Link
-              href="/search"
-              className="text-gray-700 hover:text-primary-600 transition-colors p-2"
-              aria-label="Search"
-            >
-              <Search className="h-5 w-5" />
-            </Link>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="text-gray-700 hover:text-primary-600 transition-colors p-2"
@@ -100,14 +93,6 @@ export default function Navbar() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-gray-200 bg-white">
           <div className="px-4 py-6 space-y-4">
-            <Link
-              href="/search"
-              className="block text-gray-700 hover:text-primary-600 font-medium py-2 transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Search Rentals
-            </Link>
-            
             {status === 'authenticated' ? (
               <>
                 {session?.user?.role === 'ADMIN' && (
@@ -148,7 +133,15 @@ export default function Navbar() {
                   Sign Out
                 </button>
               </>
-            ) : null}
+            ) : (
+              <Link
+                href="/auth/signin"
+                className="block bg-primary-600 text-white text-center px-4 py-3 rounded-lg hover:bg-primary-700 font-medium transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       )}

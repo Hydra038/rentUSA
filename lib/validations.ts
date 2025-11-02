@@ -68,10 +68,10 @@ export const listingSearchSchema = z.object({
 // ============================================
 
 export const inquirySchema = z.object({
-  listingId: z.string().cuid('Invalid listing ID'),
+  listingId: z.string().min(1, 'Listing ID is required'),
   name: z.string().min(2, 'Name is required'),
   email: z.string().email('Invalid email address'),
-  phone: z.string().regex(/^\+?[\d\s\-\(\)]+$/, 'Invalid phone number').optional(),
+  phone: z.string().optional().nullable(),
   message: z.string().min(10, 'Message must be at least 10 characters'),
 })
 

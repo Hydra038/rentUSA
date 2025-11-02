@@ -4,10 +4,14 @@
  */
 
 import { notFound } from 'next/navigation'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import BackButton from '@/components/BackButton'
 import ListingGallery from '@/components/ListingGallery'
 import MapView from '@/components/MapView'
+import InquiryForm from '@/components/InquiryForm'
+import SaveButton from '@/components/SaveButton'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Bed, Bath, Square, MapPin, Calendar, PawPrint, Mail, Phone } from 'lucide-react'
 
@@ -34,6 +38,10 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function ListingDetailPage({ params }: PageProps) {
   console.log('🔍 Fetching listing with ID:', params.id)
+  
+  // Get current session to check if user is admin
+  const session = await getServerSession(authOptions)
+  const isAdmin = session?.user?.role === 'ADMIN'
   
   const { data: listing, error } = await supabaseAdmin
     .from('Listing')
@@ -66,7 +74,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  if (!listing.published) {
+  // Only allow unpublished listings to be viewed by admins
+  if (!listing.published && !isAdmin) {
     console.error('❌ Listing not published:', params.id)
     notFound()
   }
@@ -76,9 +85,34 @@ export default async function ListingDetailPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Back Button */}
-        <div className="mb-4 sm:mb-6">
+        {/* Back Button and Status */}
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <BackButton />
+          
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Save Button */}
+            <SaveButton listingId={listing.id} showText={true} size="md" />
+            
+            {/* Status Badge - Only visible to admins or for unpublished listings */}
+            {isAdmin && (
+              <>
+                <span
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold shadow-sm ${
+                    listing.published
+                      ? 'bg-green-100 text-green-800 border border-green-200'
+                      : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                  }`}
+                >
+                  {listing.published ? '✓ Published' : '⏳ Pending Review'}
+                </span>
+                {listing.featured && (
+                  <span className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary-100 text-primary-800 border border-primary-200 shadow-sm">
+                    ⭐ Featured
+                  </span>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
         {/* Gallery */}
@@ -188,71 +222,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
           {/* Right Column - Contact Form */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:sticky lg:top-8">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Contact Property</h2>
-              <form className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    required
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                    Message
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    rows={4}
-                    required
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base"
-                    placeholder="I'm interested in this property..."
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-primary-600 hover:bg-primary-700 text-white py-2.5 sm:py-3 rounded-md font-medium transition-colors text-sm sm:text-base"
-                >
-                  Send Message
-                </button>
-              </form>
-
-              {/* Listed By */}
-              <div className="mt-6 pt-6 border-t">
-                <h3 className="text-sm font-medium text-gray-500 mb-2">Listed By</h3>
-                <p className="text-gray-900 font-medium text-sm sm:text-base">{listing.listedBy.name || 'Property Manager'}</p>
-              </div>
-            </div>
+            <InquiryForm listingId={listing.id} listedBy={listing.listedBy} />
           </div>
         </div>
       </div>

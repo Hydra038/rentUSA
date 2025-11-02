@@ -19,7 +19,7 @@ async function setAdminPassword() {
   console.log('\n🔐 Setting admin password...\n')
 
   const email = 'admin@rentusa.com'
-  const newPassword = 'admin123'
+  const newPassword = 'Rentusa@'
 
   // Hash the password
   const hashedPassword = await bcrypt.hash(newPassword, 10)
@@ -38,7 +38,7 @@ async function setAdminPassword() {
 
   console.log('✅ Admin password updated successfully!\n')
   console.log('📧 Email: admin@rentusa.com')
-  console.log('🔑 Password: admin123')
+  console.log('🔑 Password: Rentusa@')
   console.log('\n🌐 Login at: http://localhost:3000/auth/signin')
   console.log('📊 Admin Dashboard: http://localhost:3000/dashboard/admin\n')
 }

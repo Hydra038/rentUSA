@@ -7,6 +7,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { hash } from 'bcryptjs'
 import { supabaseAdmin } from '@/lib/supabase'
 import { z } from 'zod'
+import { randomBytes } from 'crypto'
+
+// Generate a CUID-like ID (compatible with Prisma's cuid())
+function generateCuid() {
+  const timestamp = Date.now().toString(36)
+  const randomPart = randomBytes(12).toString('base64').replace(/[+/=]/g, '').substring(0, 16)
+  return `c${timestamp}${randomPart}`
+}
 
 const registerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -37,13 +45,17 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await hash(password, 12)
 
+    // Generate CUID for user ID
+    const userId = generateCuid()
+
     // Create user
     const { data: user, error } = await supabaseAdmin
       .from('User')
       .insert({
+        id: userId,
         name,
         email,
-        passwordHash: hashedPassword,
+        hashedPassword: hashedPassword,
         role,
       })
       .select('id, name, email, role, createdAt')

@@ -8,6 +8,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
+import SaveButton from './SaveButton'
 
 interface ListingCardProps {
   listing: {
@@ -21,6 +22,7 @@ interface ListingCardProps {
     bathrooms: number
     sqft?: number
     featured: boolean
+    published?: boolean
     photos: Array<{ url: string; isPrimary: boolean }>
   }
 }
@@ -43,6 +45,35 @@ export default function ListingCard({ listing }: ListingCardProps) {
     >
       {/* Image */}
       <div className="relative h-48 sm:h-56 md:h-64 w-full overflow-hidden bg-gray-200">
+        {/* Save Button */}
+        <div className="absolute top-3 left-3 z-20">
+          <SaveButton listingId={listing.id} showText={false} size="sm" />
+        </div>
+        
+        {/* Status Badge */}
+        {listing.published !== undefined && (
+          <div className="absolute top-3 right-3 z-10">
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-semibold shadow-lg ${
+                listing.published
+                  ? 'bg-green-500 text-white'
+                  : 'bg-yellow-500 text-white'
+              }`}
+            >
+              {listing.published ? '✓ Published' : '⏳ Pending'}
+            </span>
+          </div>
+        )}
+        
+        {/* Featured Badge */}
+        {listing.featured && (
+          <div className="absolute bottom-3 left-3 z-10">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary-600 text-white shadow-lg">
+              ⭐ Featured
+            </span>
+          </div>
+        )}
+        
         {primaryPhoto && !imageError ? (
           <Image
             src={primaryPhoto.url}
