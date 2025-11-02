@@ -30,41 +30,48 @@ export default function SignInPage() {
     setLoading(true)
 
     try {
-      const result = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
+      // If there's a callback URL, just use it
+      if (callbackUrl) {
+        await signIn('credentials', {
+          email: formData.email,
+          password: formData.password,
+          callbackUrl,
+        })
+        return
+      }
+
+      // Otherwise, check user role first to determine redirect
+      const roleResponse = await fetch('/api/auth/check-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email }),
       })
 
-      if (result?.error) {
+      if (!roleResponse.ok) {
         setError('Invalid email or password')
-        console.error('Sign in error:', result.error)
-      } else {
-        // If there's a callback URL, use it
-        if (callbackUrl) {
-          router.push(callbackUrl)
-        } else {
-          // Fetch session to get user role
-          const response = await fetch('/api/auth/session')
-          const session = await response.json()
-          
-          // Redirect based on role
-          if (session?.user?.role === 'ADMIN') {
-            router.push('/dashboard/admin')
-          } else if (session?.user?.role === 'LANDLORD') {
-            router.push('/dashboard/landlord')
-          } else if (session?.user?.role === 'RENTER') {
-            router.push('/dashboard/renter')
-          } else {
-            router.push('/')
-          }
-        }
-        router.refresh()
+        setLoading(false)
+        return
       }
+
+      const { role } = await roleResponse.json()
+      
+      // Determine redirect URL based on role
+      let redirectUrl = '/dashboard/renter'
+      if (role === 'ADMIN') {
+        redirectUrl = '/dashboard/admin'
+      } else if (role === 'LANDLORD') {
+        redirectUrl = '/dashboard/landlord'
+      }
+
+      // Sign in with redirect (let NextAuth handle it)
+      await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        callbackUrl: redirectUrl,
+      })
     } catch (err) {
       console.error('Sign in exception:', err)
       setError('An error occurred. Please try again.')
-    } finally {
       setLoading(false)
     }
   }
@@ -163,15 +170,6 @@ export default function SignInPage() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-
-        {/* Demo Credentials */}
-        <div className="mt-4 sm:mt-6 bg-blue-50 border border-blue-200 rounded-md p-3 sm:p-4">
-          <p className="text-xs sm:text-sm font-medium text-blue-900 mb-2">🔑 Demo Account:</p>
-          <div className="text-xs sm:text-sm text-blue-800 space-y-1">
-            <p className="break-all"><strong>Email:</strong> admin@rentusa.com</p>
-            <p><strong>Password:</strong> Rentusa@</p>
-          </div>
-        </div>
       </div>
     </div>
   )
