@@ -134,8 +134,8 @@ export default async function StatePage({ params, searchParams }: StatePageProps
             <Pagination
               currentPage={pagination.page}
               totalPages={pagination.totalPages}
-              hasNext={pagination.hasNext}
-              hasPrev={pagination.hasPrev}
+              hasNextPage={pagination.hasNextPage}
+              hasPrevPage={pagination.hasPrevPage}
             />
           </>
         ) : (

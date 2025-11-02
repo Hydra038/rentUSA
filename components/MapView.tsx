@@ -65,7 +65,8 @@ export default function MapView({
         })
       })
       
-      // Import Leaflet CSS
+      // Import Leaflet CSS (ignore TypeScript error)
+      // @ts-ignore
       import('leaflet/dist/leaflet.css')
     }
   }, [])

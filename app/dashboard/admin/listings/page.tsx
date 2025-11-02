@@ -112,7 +112,7 @@ export default async function ManageListingsPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {listings && listings.length > 0 ? (
                   listings.map((listing) => {
-                    const primaryPhoto = listing.photos?.find(p => p.isPrimary) || listing.photos?.[0]
+                    const primaryPhoto = listing.photos?.find((p: any) => p.isPrimary) || listing.photos?.[0]
                     const cityName = listing.city?.name || 'Unknown'
                     const stateName = listing.city?.state?.name || 'Unknown'
                     

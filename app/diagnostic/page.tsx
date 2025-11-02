@@ -42,8 +42,8 @@ export default async function DiagnosticPage() {
                     <p><strong>ID:</strong> {listing.id}</p>
                     <p><strong>Published:</strong> {listing.published ? 'Yes' : 'No'}</p>
                     <p><strong>Featured:</strong> {listing.featured ? 'Yes' : 'No'}</p>
-                    <p><strong>City:</strong> {listing.city?.name || 'N/A'}</p>
-                    <p><strong>State:</strong> {listing.state?.code || 'N/A'}</p>
+                    <p><strong>City:</strong> {(listing.city as any)?.name || 'N/A'}</p>
+                    <p><strong>State:</strong> {(listing.state as any)?.code || 'N/A'}</p>
                     <a 
                       href={`/listing/${listing.id}`}
                       className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"

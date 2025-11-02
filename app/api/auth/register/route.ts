@@ -4,8 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { hash } from 'bcrypt'
-import { prisma } from '@/lib/prisma'
+import { hash } from 'bcryptjs'
+import { supabaseAdmin } from '@/lib/supabase'
 import { z } from 'zod'
 
 const registerSchema = z.object({
@@ -21,9 +21,11 @@ export async function POST(request: NextRequest) {
     const { name, email, password, role } = registerSchema.parse(body)
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    })
+    const { data: existingUser } = await supabaseAdmin
+      .from('User')
+      .select('id')
+      .eq('email', email)
+      .single()
 
     if (existingUser) {
       return NextResponse.json(
@@ -36,21 +38,24 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hash(password, 12)
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
+    const { data: user, error } = await supabaseAdmin
+      .from('User')
+      .insert({
         name,
         email,
-        password: hashedPassword,
+        passwordHash: hashedPassword,
         role,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-      },
-    })
+      })
+      .select('id, name, email, role, createdAt')
+      .single()
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json(
+        { error: 'Failed to create user' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(
       {
