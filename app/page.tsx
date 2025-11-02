@@ -16,50 +16,55 @@ export default async function HomePage() {
   let states: any[] = []
   
   try {
-    // Fetch featured listings
-    const { data: listings, error: listingsError } = await supabaseAdmin
-      .from('Listing')
-      .select(`
-        *,
-        city:City(*),
-        state:State(*),
-        photos:Photo(*)
-      `)
-      .eq('published', true)
-      .eq('featured', true)
-      .order('createdAt', { ascending: false })
-      .limit(8)
+    // Check if Supabase is configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.warn('⚠️ Supabase not configured, running with empty data')
+    } else {
+      // Fetch featured listings
+      const { data: listings, error: listingsError } = await supabaseAdmin
+        .from('Listing')
+        .select(`
+          *,
+          city:City(*),
+          state:State(*),
+          photos:Photo(*)
+        `)
+        .eq('published', true)
+        .eq('featured', true)
+        .order('createdAt', { ascending: false })
+        .limit(8)
 
-    console.log('🔍 Listings fetch result:', {
-      count: listings?.length || 0,
-      error: listingsError,
-      hasData: !!listings
-    })
+      console.log('🔍 Listings fetch result:', {
+        count: listings?.length || 0,
+        error: listingsError,
+        hasData: !!listings
+      })
 
-    if (listingsError) {
-      console.error('❌ Listings error:', listingsError)
-    }
+      if (listingsError) {
+        console.error('❌ Listings error:', listingsError)
+      }
 
-    if (!listingsError && listings) {
-      featuredListings = listings
-      console.log('✅ Featured listings loaded:', featuredListings.length)
-    }
+      if (!listingsError && listings) {
+        featuredListings = listings
+        console.log('✅ Featured listings loaded:', featuredListings.length)
+      }
 
-    // Fetch states
-    const { data: statesData, error: statesError } = await supabaseAdmin
-      .from('State')
-      .select('*')
-      .order('name', { ascending: true })
+      // Fetch states
+      const { data: statesData, error: statesError } = await supabaseAdmin
+        .from('State')
+        .select('*')
+        .order('name', { ascending: true})
 
-    console.log('🔍 States fetch result:', {
-      count: statesData?.length || 0,
-      error: statesError,
-      hasData: !!statesData
-    })
+      console.log('🔍 States fetch result:', {
+        count: statesData?.length || 0,
+        error: statesError,
+        hasData: !!statesData
+      })
 
-    if (!statesError && statesData) {
-      states = statesData
-      console.log('✅ States loaded:', states.length)
+      if (!statesError && statesData) {
+        states = statesData
+        console.log('✅ States loaded:', states.length)
+      }
     }
   } catch (error) {
     console.error('Database connection error:', error)
