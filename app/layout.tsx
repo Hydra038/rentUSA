@@ -11,6 +11,19 @@ import AuthProvider from '@/components/AuthProvider'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
+// Safe URL creation for metadata
+const getMetadataBase = () => {
+  const url = process.env.NEXTAUTH_URL || process.env.VERCEL_URL
+  if (url) {
+    try {
+      return new URL(url.startsWith('http') ? url : `https://${url}`)
+    } catch {
+      return undefined
+    }
+  }
+  return undefined
+}
+
 export const metadata = {
   title: {
     default: 'RentUSA - Find Your Perfect Rental Home',
@@ -18,7 +31,7 @@ export const metadata = {
   },
   description: 'Discover rental homes across all 50 states and the District of Columbia. Search apartments, houses, and more with RentUSA.',
   keywords: 'rent, apartments, houses, real estate, rentals, USA, properties',
-  metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
+  metadataBase: getMetadataBase(),
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },
