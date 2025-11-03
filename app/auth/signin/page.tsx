@@ -30,45 +30,52 @@ export default function SignInPage() {
     setLoading(true)
 
     try {
-      // If there's a callback URL, just use it
-      if (callbackUrl) {
-        await signIn('credentials', {
-          email: formData.email,
-          password: formData.password,
-          callbackUrl,
-        })
-        return
-      }
-
-      // Otherwise, check user role first to determine redirect
-      const roleResponse = await fetch('/api/auth/check-role', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email }),
+      // Sign in with redirect: false to handle errors
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
       })
 
-      if (!roleResponse.ok) {
+      if (result?.error) {
         setError('Invalid email or password')
         setLoading(false)
         return
       }
 
-      const { role } = await roleResponse.json()
-      
-      // Determine redirect URL based on role
-      let redirectUrl = '/dashboard/renter'
-      if (role === 'ADMIN') {
-        redirectUrl = '/dashboard/admin'
-      } else if (role === 'LANDLORD') {
-        redirectUrl = '/dashboard/landlord'
-      }
+      if (result?.ok) {
+        // Keep loading state active during redirect
+        setLoading(true)
+        
+        // If there's a callback URL, use it
+        if (callbackUrl) {
+          window.location.replace(callbackUrl)
+          return
+        }
 
-      // Sign in with redirect (let NextAuth handle it)
-      await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        callbackUrl: redirectUrl,
-      })
+        // Otherwise, check user role to determine redirect
+        const roleResponse = await fetch('/api/auth/check-role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.email }),
+        })
+
+        if (roleResponse.ok) {
+          const { role } = await roleResponse.json()
+          
+          // Use window.location.replace for hard redirect (no back button)
+          if (role === 'ADMIN') {
+            window.location.replace('/dashboard/admin')
+          } else if (role === 'LANDLORD') {
+            window.location.replace('/dashboard/landlord')
+          } else {
+            window.location.replace('/dashboard/renter')
+          }
+        } else {
+          // Fallback to renter dashboard if role check fails
+          window.location.replace('/dashboard/renter')
+        }
+      }
     } catch (err) {
       console.error('Sign in exception:', err)
       setError('An error occurred. Please try again.')
