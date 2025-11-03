@@ -33,6 +33,10 @@ export const metadata = {
   description: 'Discover rental homes across all 50 states and the District of Columbia. Search apartments, houses, and more with RentUSA.',
   keywords: 'rent, apartments, houses, real estate, rentals, USA, properties',
   metadataBase: getMetadataBase(),
+  // Google AdSense verification
+  other: {
+    'google-adsense-account': 'ca-pub-4193972942925431',
+  },
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },
