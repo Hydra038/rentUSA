@@ -6,7 +6,7 @@ Go to your Vercel project → Settings → Environment Variables and add:
 
 ### 1. NEXTAUTH_URL (CRITICAL FOR AUTHENTICATION)
 ```
-NEXTAUTH_URL=https://usarentsite.vercel.app
+NEXTAUTH_URL=https://rent-usa.vercel.app
 ```
 **This is the most important one!** Without this, NextAuth won't work properly in production.
 
@@ -28,6 +28,10 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 DATABASE_URL=postgresql://postgres:Derq%40038!.@db.qjienjhenbpxppmzwxbl.supabase.co:5432/postgres
 DIRECT_URL=postgresql://postgres:Derq%40038!.@db.qjienjhenbpxppmzwxbl.supabase.co:5432/postgres
 ```
+
+## Important Note:
+Your production URL is: **https://rent-usa.vercel.app**
+Make sure to use this exact URL for NEXTAUTH_URL (with https://)
 
 ## How to Add Variables in Vercel:
 
@@ -52,7 +56,7 @@ NextAuth uses this to:
 - Handle OAuth redirects
 - Create session tokens
 
-Without it set to your production URL (`https://usarentsite.vercel.app`), authentication will fail or redirect to localhost.
+Without it set to your production URL (`https://rent-usa.vercel.app`), authentication will fail or redirect to localhost.
 
 ## Quick Check:
 
