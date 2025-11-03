@@ -8,6 +8,7 @@ import { Inter } from 'next/font/google'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import AuthProvider from '@/components/AuthProvider'
+import Script from 'next/script'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
@@ -79,6 +80,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.variable}>
+      <head>
+        {/* Google AdSense */}
+        {process.env.NEXT_PUBLIC_ADSENSE_ID && (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_ID}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
+      </head>
       <body>
         <AuthProvider>
           <div className="flex flex-col min-h-screen">
